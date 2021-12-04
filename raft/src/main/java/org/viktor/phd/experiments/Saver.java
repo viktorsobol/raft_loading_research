@@ -13,7 +13,7 @@ import java.util.List;
 
 public class Saver {
 
-    private String basePath = "/Users/vsobol/personal_projects/PhD/Raft_Load_capacity_research/apps/raft_server/experiment_results/";
+    private final String basePath = "experiment_results/";
     ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
 
     public void save(ExperimentResults experimentResults) {

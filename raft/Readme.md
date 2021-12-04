@@ -2,7 +2,7 @@
 # Cluster with N nodes communicating by RAFT protocol
 
 ## Build
-`mvn clean compile assembly:single` to produce jar file
+`mvn clean package` to produce jar file
 
 
 `mvn clean install --batch-mode -V -DskipTests=true -Dmaven.test.skip=true -Dmaven.javadoc.skip=true` to build atomix library
