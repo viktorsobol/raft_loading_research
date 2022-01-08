@@ -29,25 +29,31 @@ public abstract class ExperimentProcess implements Runnable {
 
     private final ApplicationDetails applicationDetails;
 
-    public ExperimentProcess(Long runTime, String key, OperationType type, ApplicationDetails applicationDetails) {
+    private final Long startTime;
+
+    public ExperimentProcess(Long runTime, String key, OperationType type, ApplicationDetails applicationDetails, Long startTime) {
         this.runTime = runTime;
         this.key = key;
         this.type = type;
         this.applicationDetails = applicationDetails;
+        this.startTime = startTime;
     }
 
     @Override
     public void run() {
         scheduleShutDown();
+        while(System.currentTimeMillis() < startTime) {
+            LOGGER.info("Skipping...");
+        }
 
-        LOGGER.info("Starting " + type.name() + " process...");
+        LOGGER.debug("Starting " + type.name() + " process...");
 
         long startTime = System.currentTimeMillis();
         LinkedList<RecordedData> recordedData = collectData();
         long totalTime = System.currentTimeMillis() - startTime;
         persistData(recordedData, totalTime);
 
-        LOGGER.info(type.name()  + " processed for key - " + key + " has finished. " +
+        LOGGER.debug(type.name()  + " processed for key - " + key + " has finished. " +
                 "Total time - " + totalTime + " ms. Total operations - " + recordedData.size());
 
     }
@@ -57,17 +63,9 @@ public abstract class ExperimentProcess implements Runnable {
     protected void scheduleShutDown() {
         // loop runs for specific amount of time
         scheduler.schedule(() -> {
-            LOGGER.info("Setting off the reading process");
+            LOGGER.debug("Setting off the reading process");
             isOn.set(false);
         }, runTime, TimeUnit.MILLISECONDS);
-    }
-
-    protected void pause() {
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 
     private void persistData(List<RecordedData> data, long totalTime) {
@@ -76,6 +74,7 @@ public abstract class ExperimentProcess implements Runnable {
                 .applicationId(applicationDetails.getApplicationId())
                 .type(type)
                 .durationMs(totalTime)
+                .dataSize(data.size())
                 .observedData(data)
                 .build();
 

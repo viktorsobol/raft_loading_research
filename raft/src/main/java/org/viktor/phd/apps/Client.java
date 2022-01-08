@@ -20,8 +20,6 @@ public class Client {
 
     public void run(String[] args) throws ParseException, InterruptedException {
 
-        ExecutorService pool = Executors.newFixedThreadPool(10);
-
         Options options = getOptions();
         CommandLine commandLine;
 
@@ -30,7 +28,8 @@ public class Client {
 
         String experimentId = commandLine.getOptionValue("expId");
         String applicationId = commandLine.getOptionValue("aId");
-        int rwRatio = Integer.parseInt(commandLine.getOptionValue("rwRatio"));
+        int readClientsCount = Integer.parseInt(commandLine.getOptionValue("readClients"));
+        int writeClientsCount = Integer.parseInt(commandLine.getOptionValue("writeClients"));
         Long runTimeMs = Long.parseLong(commandLine.getOptionValue("runTimeMs"));
         String dataKey = commandLine.getOptionValue("key");
         LOGGER.info("Data key: " + dataKey);
@@ -38,38 +37,48 @@ public class Client {
         int port = Integer.parseInt(commandLine.getOptionValue("port"));
         List<String> members = Arrays.asList(commandLine.getOptionValue("mIps").split(","));
 
-        CompletableFuture<?>[] futures = new CompletableFuture[rwRatio + 1];
+        CompletableFuture<?>[] futures = new CompletableFuture[readClientsCount + writeClientsCount];
 
-        RaftClient writeClient =
-                new RaftClient(
-                        port,
-                        members,
-                        CommunicationStrategy.LEADER,
-                        ReadConsistency.SEQUENTIAL
-                );
-        LOGGER.info("Write client is created");
+        ExecutorService pool = Executors.newFixedThreadPool(readClientsCount + writeClientsCount);
 
-        RaftClient[] readClients = new RaftClient[rwRatio];
+        RaftClient[] readClients = new RaftClient[readClientsCount];
+        RaftClient[] writeClients = new RaftClient[writeClientsCount];
 
-        futures[0] = CompletableFuture.runAsync(new ClientWriteProcess(
-                writeClient,
-                dataKey,
-                runTimeMs,
-                new ApplicationDetails(experimentId, applicationId)
-        ), pool);
-        LOGGER.info("Write process is submitted...");
-        for (int i = 1; i <= rwRatio; i++) {
-            readClients[i - 1] = new RaftClient(
+        // Delay before execution for 30 seconds
+        // so all the clients will start working roughly at the same time
+        Long startTime = System.currentTimeMillis() + 30000;
+
+        LOGGER.info("Creating write clients...");
+        for (int i = 0; i < writeClientsCount; i++) {
+            writeClients[i] = new RaftClient(
                     port + i,
                     members,
-                    CommunicationStrategy.FOLLOWERS,
-                    ReadConsistency.SEQUENTIAL
+                    CommunicationStrategy.LEADER,
+                    ReadConsistency.LINEARIZABLE
             );
-            futures[i] = CompletableFuture.runAsync(new ClientReadProcess(
-                    readClients[i - 1],
+            futures[i] = CompletableFuture.runAsync(new ClientWriteProcess(
+                    writeClients[i],
                     dataKey,
                     runTimeMs,
-                    new ApplicationDetails(experimentId, applicationId + i)
+                    new ApplicationDetails(experimentId, applicationId + "-" + i),
+                    startTime
+            ), pool);
+            LOGGER.info("Write process is submitted...");
+        }
+
+        for (int i = 0; i < readClientsCount; i++) {
+            readClients[i] = new RaftClient(
+                    port + i + writeClientsCount,
+                    members,
+                    CommunicationStrategy.LEADER,
+                    ReadConsistency.LINEARIZABLE
+            );
+            futures[writeClientsCount + i] = CompletableFuture.runAsync(new ClientReadProcess(
+                    readClients[i],
+                    dataKey,
+                    runTimeMs,
+                    new ApplicationDetails(experimentId, applicationId + "-"+ i + writeClientsCount),
+                    startTime
             ), pool);
             LOGGER.info("Read process is submitted...");
 
@@ -78,9 +87,13 @@ public class Client {
 
         LOGGER.info("All processes have completed");
 
-        writeClient.shutDown();
         for (RaftClient readClient: readClients) {
             readClient.shutDown();
+        }
+
+
+        for (RaftClient wc: writeClients) {
+            wc.shutDown();
         }
 
         LOGGER.info("All clients have shutdown");
@@ -118,9 +131,15 @@ public class Client {
                 .hasArg()
                 .build();
 
-        Option rwRatio = Option.builder("rwRatio")
+        Option readClients = Option.builder("readClients")
                 .required(true)
-                .desc("One write proces and rwRation Read processes will spinUp")
+                .desc("Quantity of read processes")
+                .hasArg()
+                .build();
+
+        Option writeClients = Option.builder("writeClients")
+                .required(true)
+                .desc("Quantity of write processes")
                 .hasArg()
                 .build();
 
@@ -130,14 +149,14 @@ public class Client {
                 .hasArg()
                 .build();
 
-
         Options options = new Options();
         options.addOption(optionIp);
         options.addOption(optionMembersIps);
         options.addOption(key);
         options.addOption(appId);
         options.addOption(expId);
-        options.addOption(rwRatio);
+        options.addOption(readClients);
+        options.addOption(writeClients);
         options.addOption(runTime);
         return options;
     }

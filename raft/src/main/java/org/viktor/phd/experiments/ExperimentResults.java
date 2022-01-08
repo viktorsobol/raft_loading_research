@@ -18,6 +18,8 @@ public class ExperimentResults {
 
     private String applicationId;
 
+    private Integer dataSize;
+
     private List<RecordedData> observedData;
 
     private OperationType type;

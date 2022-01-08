@@ -16,8 +16,8 @@ public class ClientReadProcess extends ExperimentProcess {
 
     private final RaftClient raftClient;
 
-    public ClientReadProcess(RaftClient raftClient, String key, Long runTime, ApplicationDetails applicationDetails) {
-        super(runTime, key, OperationType.READ, applicationDetails);
+    public ClientReadProcess(RaftClient raftClient, String key, Long runTime, ApplicationDetails applicationDetails, Long startTime) {
+        super(runTime, key, OperationType.READ, applicationDetails, startTime);
         this.raftClient = raftClient;
     }
 
@@ -46,7 +46,7 @@ public class ClientReadProcess extends ExperimentProcess {
 
             observedData.add(new RecordedData(System.currentTimeMillis(), Integer.valueOf(res)));
         }
-        LOGGER.info("Observed data size - " + observedData.size());
+        LOGGER.debug("Observed data size - " + observedData.size());
 
         return observedData;
     }

@@ -22,8 +22,8 @@ public class ClientWriteProcess extends ExperimentProcess {
 
     private final RaftClient raftClient;
 
-    public ClientWriteProcess(RaftClient raftClient, String key, Long runTime, ApplicationDetails applicationDetails) {
-        super(runTime, key, OperationType.WRITE, applicationDetails);
+    public ClientWriteProcess(RaftClient raftClient, String key, Long runTime, ApplicationDetails applicationDetails, Long startTime) {
+        super(runTime, key, OperationType.WRITE, applicationDetails, startTime);
         this.raftClient = raftClient;
     }
 

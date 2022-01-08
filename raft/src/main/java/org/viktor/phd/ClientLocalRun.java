@@ -37,7 +37,7 @@ public class ClientLocalRun {
                                 readClient,
                                 "test5",
                                 10000L,
-                                new ApplicationDetails("local", "main")));
+                                new ApplicationDetails("local", "main"), System.currentTimeMillis()));
 
         CompletableFuture<Void> asyncRead1 = CompletableFuture
                 .runAsync(
@@ -45,7 +45,7 @@ public class ClientLocalRun {
                                 readClient1,
                                 "test5",
                                 10000L,
-                                new ApplicationDetails("local", "main")));
+                                new ApplicationDetails("local", "main"), System.currentTimeMillis()));
 
 
         CompletableFuture<Void> asyncWrite = CompletableFuture
@@ -54,7 +54,7 @@ public class ClientLocalRun {
                                 writeClient,
                                 "test5",
                                 10000L,
-                                new ApplicationDetails("local", "main")));
+                                new ApplicationDetails("local", "main"), System.currentTimeMillis()));
         asyncRead.join();
         asyncRead1.join();
         asyncWrite.join();
