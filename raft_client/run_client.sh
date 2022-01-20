@@ -11,7 +11,7 @@ java -jar target/raft_server-1.0-SNAPSHOT.jar \
   -mIps "10.148.0.34:6777,10.148.0.35:6777,10.148.0.36:6777" \
   -expId Test-run \
   -totalThreads 120 \
-  -writeThreads 60 \
+  -writeThreads 10 \
   -runTimeMs 120000 \
   >> logs/client.log 2>&1 &
 
