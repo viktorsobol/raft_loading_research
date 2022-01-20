@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.viktor.phd.experiments.OperationType;
 
+import java.time.Instant;
 import java.util.LinkedList;
 
 import static io.atomix.primitive.operation.PrimitiveOperation.operation;
@@ -24,6 +25,7 @@ public class ClientReadProcess extends ExperimentProcess {
     protected LinkedList<RecordedData> collectData() {
         LinkedList<RecordedData> observedData = new LinkedList<>();
         while(isOn.get()) {
+            long startTime =  Instant.now().toEpochMilli();
             String res = raftClient
                     .execute(operation(GET, CLIENT_SERIALIZER.encode(key)))
                     .thenApply(result -> {
@@ -44,7 +46,7 @@ public class ClientReadProcess extends ExperimentProcess {
                 LOGGER.warn("Data is not available yet");
             }
 
-            observedData.add(new RecordedData(System.currentTimeMillis(), Integer.valueOf(res)));
+            observedData.add(new RecordedData(startTime, Integer.valueOf(res)));
         }
         LOGGER.debug("Observed data size - " + observedData.size());
 

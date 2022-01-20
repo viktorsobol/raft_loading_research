@@ -1,5 +1,6 @@
 package org.viktor.phd.client;
 
+import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.viktor.phd.experiments.ExperimentResults;
@@ -39,12 +40,14 @@ public abstract class ExperimentProcess implements Runnable {
         this.startTime = startTime;
     }
 
+    @SneakyThrows
     @Override
     public void run() {
-        scheduleShutDown();
         while(System.currentTimeMillis() < startTime) {
+            Thread.sleep(1000);
             LOGGER.info("Skipping...");
         }
+        scheduleShutDown();
 
         LOGGER.debug("Starting " + type.name() + " process...");
 
@@ -72,6 +75,7 @@ public abstract class ExperimentProcess implements Runnable {
         var results = ExperimentResults.builder()
                 .expId(applicationDetails.getExperimentId())
                 .applicationId(applicationDetails.getApplicationId())
+                .key(key)
                 .type(type)
                 .durationMs(totalTime)
                 .dataSize(data.size())

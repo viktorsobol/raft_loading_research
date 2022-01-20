@@ -20,6 +20,8 @@ public class ExperimentResults {
 
     private Integer dataSize;
 
+    private String key;
+
     private List<RecordedData> observedData;
 
     private OperationType type;

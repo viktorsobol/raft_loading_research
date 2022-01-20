@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.viktor.phd.experiments.OperationType;
 
+import java.time.Instant;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -38,7 +39,7 @@ public class ClientWriteProcess extends ExperimentProcess {
                             operation(PUT, CLIENT_SERIALIZER.encode(Maps.immutableEntry(key, String.valueOf(version))))
                     ).join();
 
-            savedData.add(new RecordedData(System.currentTimeMillis(), version));
+            savedData.add(new RecordedData(Instant.now().toEpochMilli(), version));
             version++;
         }
         LOGGER.info("Saved data size - " + savedData.size());

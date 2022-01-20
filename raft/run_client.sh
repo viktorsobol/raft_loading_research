@@ -8,13 +8,11 @@ done
 
 java -jar target/raft_server-1.0-SNAPSHOT.jar \
  -type Client \
- -port 7000 \
- -key test1 \
  -mIps "localhost:6777,localhost:6778,localhost:6779" \
- -aId app-simple-test \
  -expId exp-simple-test \
- -rwRatio 5 \
- -runTimeMs 60000 \
+ -totalThreads 12 \
+ -writeThreads 3 \
+ -runTimeMs 120000 \
  >> logs/client.log &
 
 tail -f logs/client.log

@@ -19,7 +19,7 @@ public class Saver {
     public void save(ExperimentResults experimentResults) {
         try {
             String filePath = basePath + experimentResults.getExpId() +
-                    "-" + experimentResults.getType().name() +
+                    "-" + experimentResults.getType().name() + "-" + experimentResults.getKey() +
                     "-" + experimentResults.getApplicationId() + ".json";
 
             Path path = Path.of(filePath);
