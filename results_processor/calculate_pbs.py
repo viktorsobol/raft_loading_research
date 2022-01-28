@@ -3,6 +3,7 @@ from os.path import isfile, join
 import json
 import sys
 import matplotlib.pyplot as plt
+import numpy as np
 import seaborn as sns
 
 # Example of data
@@ -43,7 +44,7 @@ def calculate_pbs(data_path: str) -> dict:
 
     results = {}
     for file in onlyfiles:
-        data = json.load(open(data_path + file))
+        data = json.load(open(join(data_path, file)))
         
         if data['key'] not in results:
             results[data['key']] = []
@@ -77,8 +78,6 @@ def calculate_pbs(data_path: str) -> dict:
                     continue
 
                 t_diff = t - write_data_dict[v]
-                if t_diff > 0:
-                    print("Exists {d}".format(d=t_diff))
                 res.append(t_diff)
 
             read_data_staleness.append(res)
@@ -91,6 +90,29 @@ def calculate_pbs(data_path: str) -> dict:
 
     return observed_staleness
 
+
+def save_percentiles(stats: dict, data_folder:str):
+    all_stats = stats.values()
+    flat_stats = [item for sublist in all_stats for item in sublist]
+    p_50 = np.percentile(flat_stats, 50)
+    p_75 = np.percentile(flat_stats, 75)
+    p_90 = np.percentile(flat_stats, 90)
+    p_95 = np.percentile(flat_stats, 95)
+    p_97 = np.percentile(flat_stats, 97)
+    p_99 = np.percentile(flat_stats, 99)
+    max = np.amax(flat_stats)
+
+    percentile_file = open(join(data_folder, "../percentiles.txt"), "a")
+    percentile_file.write("p50 - {p}\n".format(p=p_50))
+    percentile_file.write("p75 - {p}\n".format(p=p_75))
+    percentile_file.write("p90 - {p}\n".format(p=p_90))
+    percentile_file.write("p95 - {p}\n".format(p=p_95))
+    percentile_file.write("p97 - {p}\n".format(p=p_97))
+    percentile_file.write("p99 - {p}\n".format(p=p_99))
+    percentile_file.write("max - {p}\n".format(p=max))
+    percentile_file.close()
+
+
 # https://towardsdatascience.com/histograms-and-density-plots-in-python-f6bda88f5ac0
 def plot_stats(stats: dict):
     for k, stat in stats.items():
@@ -99,7 +121,7 @@ def plot_stats(stats: dict):
                  label = k)
 
     # plt.legend(prop={'size': 16}, title = 'PBS', bbox_to_anchor=(1.15, 1.2), loc='upper left')
-    plt.xlim([-300, 400])
+    plt.xlim([-300, 300])
     plt.title('Density Plot for staleness')
     plt.xlabel('Delay (ms)')
     plt.ylabel('Density')
@@ -115,4 +137,5 @@ if __name__ == "__main__":
     #             'Raft_Load_capacity_research/raft_loading_research/' \
     #             'experiment_results/experiment_1/data/'
     stats = calculate_pbs(data_path)
+    save_percentiles(stats, data_path)
     plot_stats(stats)

@@ -3,7 +3,7 @@ target/
 */raft/
 */logs/
 */venv/
-*/_results/*
+_results
 */experiment_results/data/
 server.zip
 *.log

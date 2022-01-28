@@ -51,7 +51,7 @@ public class Client {
 
         // Delay before execution for 30 seconds
         // so all the clients will start working roughly at the same time
-        Long startTime = System.currentTimeMillis() + 90000;
+        Long startTime = System.currentTimeMillis() + 120000;
 
         LOGGER.info("Creating clients...");
         for (int i = 0; i < totalWriteThreads; i++) {
@@ -81,8 +81,8 @@ public class Client {
                 RaftClient client = new RaftClient(
                         nextPort(),
                         members,
-                        CommunicationStrategy.LEADER,
-                        ReadConsistency.LINEARIZABLE
+                        CommunicationStrategy.ANY,
+                        ReadConsistency.SEQUENTIAL
                 );
 
                 var readFuture = CompletableFuture.runAsync(new ClientReadProcess(

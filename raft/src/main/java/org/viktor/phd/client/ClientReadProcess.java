@@ -26,27 +26,33 @@ public class ClientReadProcess extends ExperimentProcess {
         LinkedList<RecordedData> observedData = new LinkedList<>();
         while(isOn.get()) {
             long startTime =  Instant.now().toEpochMilli();
-            String res = raftClient
-                    .execute(operation(GET, CLIENT_SERIALIZER.encode(key)))
-                    .thenApply(result -> {
-                        if (result == null) {
-                            return "-1";
-                        } else {
-                            return CLIENT_SERIALIZER.decode(result);
-                        }
-                    })
-                    .whenComplete((result, error) -> {
-                        if (error != null) {
-                            LOGGER.error("Unable to query key - " + key, error);
-                        }
-                    })
-                    .join();
+            String res = "-1";
+            try {
+                res = raftClient
+                        .execute(operation(GET, CLIENT_SERIALIZER.encode(key)))
+                        .thenApply(result -> {
+                            if (result == null) {
+                                return "-1";
+                            } else {
+                                return CLIENT_SERIALIZER.decode(result);
+                            }
+                        })
+                        .whenComplete((result, error) -> {
+                            if (error != null) {
+                                LOGGER.error("Unable to query key - " + key, error);
+                            }
+                        })
+                        .join();
+            } catch (Throwable e) {
+                LOGGER.error("Error during read", e);
+            }
 
             if (res.equals("-1")) {
                 LOGGER.warn("Data is not available yet");
+            } else {
+                observedData.add(new RecordedData(startTime, Integer.valueOf(res)));
             }
 
-            observedData.add(new RecordedData(startTime, Integer.valueOf(res)));
         }
         LOGGER.debug("Observed data size - " + observedData.size());
 

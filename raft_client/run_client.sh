@@ -8,7 +8,7 @@ mkdir -p logs
 
 java -jar target/raft_server-1.0-SNAPSHOT.jar \
   -type Client \
-  -mIps "10.148.0.34:6777,10.148.0.35:6777,10.148.0.36:6777" \
+  -mIps "10.148.0.34:6777,10.148.0.35:6777,10.148.0.36:6777,10.148.0.37:6777,10.148.0.38:6777" \
   -expId Test-run \
   -totalThreads 120 \
   -writeThreads 10 \
