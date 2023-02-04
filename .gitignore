@@ -8,3 +8,6 @@ _results
 imitational_results/
 server.zip
 *.log
+*.eps
+*.svg
+*.zip
